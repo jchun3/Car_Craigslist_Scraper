@@ -17,9 +17,46 @@ class car_scraper(object):
         self.sec_gen = [2000,2005]
         self.thir_gen = [2005,2011]
         self.fo_gen = [2011, 2015]
+        self.conn1 = sqlite3.connect(r'E:\Working Codes\Testing.db')
+        self.conn2 = sqlite3.connect(r'E:\Working Codes\Testing2.db')
+        self.sql_table1 = """
+            CREATE TABLE data (
+            id INTEGER PRIMARY KEY,
+            vin_number text,
+            car_year integer,
+            car_type text,
+            car_brand text,
+            car_price integer,
+            car_date integer
+            )
+            """
+        self.sql_table2 = """
+            CREATE TABLE data (
+            id INTEGER PRIMARY KEY,
+            title_name text,
+            car_post_date integer,
+            condition text,
+            cylinder text,
+            drive text,
+            fuel text,
+            odometer integer,
+            paint_color text,
+            size text,
+            title_status text,
+            transmission text,
+            type text
+            )
+            """
+        self.data1 ="INSERT INTO data (vin_number, car_year, car_type, car_brand, car_price, car_date) VALUES(?,?,?,?,?,?)"
+        self.data2 ="INSERT INTO data (title_name, car_post_date, condition, cylinder, drive, fuel, odometer, paint_color, size, title_status, transmission, type) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+        self.item_list=[]
     #starting up Chrome
     #def startdriver(self):
-
+    def adding_data(self, car_info):
+        
+        cur1 = self.conn1.cursor()
+        cur2 = self.conn2.cursor()
+        
     def fill_details(self):
 
         #parsing on html with id = query
@@ -70,6 +107,11 @@ class car_scraper(object):
             #breaks down html file from the element site
             source = requests.get(self.browser.current_url).text
             soup = BeautifulSoup(source, 'lxml')
+            #find the date of posted ad
+            posted_date = soup.find('time', {'class':'date timeago'})['datetime'].split('T')
+            #pulling data set 1
+            title_name = soup.find('span', {'id':'titletextonly'}).text
+            name_price_list = soup.find('span', {'class':'price'}).text
             #pulling data
             finding_link = soup.find_all('p',{'class':'attrgroup'})
             #first convert html to line of strings
@@ -80,6 +122,7 @@ class car_scraper(object):
             new_list = temp_list.split('\n')
             #filter out empty spaces
             new_list = list(filter(None, new_list))
+            new_name = new_list[0].split(' ')
             #condition to split only with ":" to convert into category for dict
             for elem in new_list:
                 if ':' in elem:
@@ -89,20 +132,31 @@ class car_scraper(object):
                     elem
             #convert strings into dict
                 res_dct = { last_list[i]: last_list[i+1] for i in range(0, len(last_list), 2)}
+            res_dct['name'] = new_list[0]
+            res_dct['price'] = name_price_list
+            res_dct['year']= new_name[0]
+            res_dct['brand'] = new_name[1]
+            res_dct['model']= new_name[-1]
+            res_dct['posted date']= posted_date[0]
+            self.item_list.append(res_dct)
             print(res_dct)
 
             
             self.browser.close()
         self.browser.switch_to.window(self.browser.window_handles[0])
         self.browser.close()
-            
-##            post_titles_list = []
-##            for title in all_hdrlnk:
-##                post_titles_list.append(title.text)
-
-##        except exceptions.InvalidSessionIdException as e:
-##            print(e.message)
 
 
-car_scraper().fill_details()
+options = ['VIN', 'condition', 'cylinders', 'drive', 'fuel', 'odometer', 'paint color',
+           'size', 'title status', 'transmission', 'type', 'name', 'price',
+           'year', 'brand', 'model', 'posted date']
+data = car_scraper().fill_details()
+
+for info in data:
+    for option in options:
+        if option not in info:
+            info[option] = ''
+        else:
+            continue
+print(data)
 
