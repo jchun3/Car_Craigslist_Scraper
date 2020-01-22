@@ -53,7 +53,7 @@ class car_scraper(object):
     #starting up Chrome
     #def startdriver(self):
 
-    def adding_data(self, car_data):
+    def adding_data(self, car_data, pid_listings):
         
         cur1 = self.conn1.cursor()
         for car_info in car_data:
@@ -63,6 +63,18 @@ class car_scraper(object):
                                       car_info['transmission'], car_info['type']))
                                                                                                                             
             self.conn1.commit()
+            
+    def filtering(self):
+        pids_list = []
+        cur1 = self.conn1.cursor()
+
+        cur1.execute("SELECT car_pid FROM data")
+        car_pids = cur1.fetchall()
+
+        for pid in car_pids:
+            pids_list.append(int(pid[0]))
+        return pids_list
+    
     def fill_details(self):
 
         #parsing on html with id = query
@@ -168,5 +180,5 @@ for info in data:
             info[option] = ''
         else:
             continue
-
+pid_listings = car_scraper().filtering()
 car_scraper().adding_data(data)
