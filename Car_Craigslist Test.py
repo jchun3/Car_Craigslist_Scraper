@@ -57,13 +57,15 @@ class car_scraper(object):
         
         cur1 = self.conn1.cursor()
         for car_info in car_data:
-            cur1.execute(self.data1, (car_info['VIN'], car_info['year'], car_info['model'], car_info['brand'], car_info['price'], car_info['posted date']))
-            cur1.execute(self.data2, (car_info['name'], car_info['posted date'], car_info['condition'], car_info['cylinders'],
-                                      car_info['drive'], car_info['fuel'], car_info['odometer'], car_info['paint color'], car_info['size'], car_info['title status'],
-                                      car_info['transmission'], car_info['type']))
-                                                                                                                            
-            self.conn1.commit()
-            
+            if int(car_info['data pid']) not in pids:
+                cur1.execute(self.data1, (car_info['VIN'], car_info['year'], car_info['model'], car_info['brand'], car_info['price'], car_info['posted date'], car_info['data pid']))
+                cur1.execute(self.data2, (car_info['name'], car_info['posted date'], car_info['condition'], car_info['cylinders'],
+                                          car_info['drive'], car_info['fuel'], car_info['odometer'], car_info['paint color'], car_info['size'], car_info['title status'],
+                                          car_info['transmission'], car_info['type']))
+                                                                                                                                
+                self.conn1.commit()
+            else:
+                continue
     def filtering(self):
         pids_list = []
         cur1 = self.conn1.cursor()
